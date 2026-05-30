@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>临沧酒店竞品分析面板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f172a;color:#e2e8f0;padding:16px}
+.header{text-align:center;padding:20px 0}
+.header h1{font-size:1.6em;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:16px 0}
+.stat-card{background:#1e293b;border-radius:12px;padding:14px;text-align:center}
+.stat-value{font-size:1.4em;font-weight:700;color:#60a5fa}
+.stat-label{font-size:.75em;color:#94a3b8;margin-top:4px}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+select,button{padding:8px 14px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#e2e8f0;font-size:.85em}
+button{background:#3b82f6;border:none;cursor:pointer}
+button:hover{background:#2563eb}
+.hotel-card{background:#1e293b;border-radius:14px;margin-bottom:16px;overflow:hidden}
+.hotel-header{padding:16px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.hotel-img{width:100%;max-width:280px;border-radius:10px;object-fit:cover;aspect-ratio:16/10}
+.hotel-info{flex:1;min-width:200px}
+.hotel-name{font-size:1.15em;font-weight:700;margin-bottom:6px}
+.hotel-meta{font-size:.8em;color:#94a3b8;margin-bottom:4px}
+.hotel-score{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;font-weight:700;font-size:.9em}
+.score-high{background:#065f46;color:#6ee7b7}
+.score-mid{background:#78350f;color:#fbbf24}
+.price-tag{font-size:1.3em;font-weight:700;color:#f59e0b}
+.price-orig{font-size:.8em;color:#64748b;text-decoration:line-through;margin-left:6px}
+.room-section,.review-section{padding:0 16px 12px}
+.section-title{font-size:.85em;font-weight:700;color:#94a3b8;padding:8px 0;border-bottom:1px solid #334155;margin-bottom:8px}
+.room-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b;font-size:.85em;flex-wrap:wrap;gap:4px}
+.room-name{flex:1;min-width:140px}
+.room-price{font-weight:700;color:#f59e0b;white-space:nowrap}
+.room-detail{font-size:.75em;color:#94a3b8;width:100%}
+.review-item{padding:8px 0;border-bottom:1px solid #1e293b;font-size:.82em}
+.review-author{font-weight:600;color:#a78bfa}
+.review-text{color:#cbd5e1;margin-top:4px;line-height:1.4}
+.img-strip{display:flex;gap:6px;overflow-x:auto;padding:0 16px 8px;-webkit-overflow-scrolling:touch}
+.img-strip img{height:80px;border-radius:8px;flex-shrink:0;object-fit:cover}
+.no-data{color:#64748b;font-style:italic;font-size:.82em;padding:8px 0}
+footer{text-align:center;padding:24px;color:#475569;font-size:.75em}
+</style>
+</head>
+<body>
+<div class="header"><h1>🏨 临沧酒店竞品分析</h1></div>
+<div class="stats" id="stats"></div>
+<div class="controls">
+  <select id="sortBy"><option value="price">按价格</option><option value="score">按评分</option><option value="reviews">按点评数</option></select>
+  <button onclick="sortHotels()">排序</button>
+  <span style="font-size:.8em;color:#94a3b8;align-self:center" id="totalCount"></span>
+</div>
+<div id="hotels"></div>
+<footer>数据来源: 携程旅行网 | 自动采集</footer>
+
+<script>
+const DATA = {"city": "临沧", "timestamp": "2026-05-30T22:33:24.223912", "count": 12, "avg_price": 166, "avg_score": 4.8, "price_range": [109.0, 244.0], "hotels": [{"name": "临沧大豪庄园酒店", "score": "4.7", "rating_label": "超棒", "reviews": [], "location": "近临沧汽车客运站 · 北回大厦", "price": "155", "original_price": "170", "images": ["https://dimg04.c-ctrip.com/images/27c2u12000na9jl4c55A2.jpg", "https://dimg04.tripcdn.com/images/1re0k12000ki80k8932B2.png", "https://dimg04.tripcdn.com/images/1re5v12000fmju5u0267A.png"], "rooms": [], "reviews_data": []}, {"name": "凯里亚德酒店（临沧佤山凤城玉龙湖公园店）", "score": "4.7", "rating_label": "超棒", "reviews": [{"author": "希尔顿", "score": "", "text": "皇冠假日酒店 海外酒店大全 企业差旅索引 企业礼品卡采购"}, {"author": "知识产权", "score": "", "text": "Trip.com Group 或 400-830-6666 中国香港：+852-3008-3295 中国澳门：+86-21 3406-4888 中国台湾：+86-21 3406-4888 其他国家和地区：+86-21-3406-4888"}], "location": "近玉龙湖公园 · 佤文化广场", "price": "151", "original_price": "169", "images": ["https://dimg04.c-ctrip.com/images/27c2u12000na9jl4c55A2.jpg", "https://dimg04.tripcdn.com/images/1re0k12000ki80k8932B2.png", "https://dimg04.tripcdn.com/images/1re5v12000fmju5u0267A.png"], "rooms": [], "reviews_data": [{"author": "希尔顿", "score": "", "text": "皇冠假日酒店 海外酒店大全 企业差旅索引 企业礼品卡采购"}, {"author": "知识产权", "score": "", "text": "Trip.com Group 或 400-830-6666 中国香港：+852-3008-3295 中国澳门：+86-21 3406-4888 中国台湾：+86-21 3406-4888 其他国家和地区：+86-21-3406-4888"}]}, {"name": "景岸逸林酒店（临沧佤山凤城高铁站店）", "score": "4.8", "rating_label": "超棒", "reviews": [{"author": "入住限制", "score": "", "text": "酒店无24小时前台，若无法在规定时间办理入住，需提前与酒店进行联系。"}, {"author": "婚宴派对限制", "score": "", "text": "酒店客房不接受婚庆/派对/聚会/商业拍摄等用途，多有不便敬请谅解。"}, {"author": "希尔顿", "score": "", "text": "皇冠假日酒店 海外酒店大全 企业差旅索引 企业礼品卡采购"}, {"author": "知识产权", "score": "", "text": "Trip.com Group 或 400-830-6666 中国香港：+852-3008-3295 中国澳门：+86-21 3406-4888 中国台湾：+86-21 3406-4888 其他国家和地区：+86-21-3406-4888"}], "location": "近玉龙湖公园 · 佤文化广场", "price": "159", "original_price": "163", "images": ["https://dimg04.c-ctrip.com/images/27c2u12000na9jl4c55A2.jpg", "https://dimg04.tripcdn.com/images/1re0k12000ki80k8932B2.png", "https://dimg04.tripcdn.com/images/1re5v12000fmju5u0267A.png"], "rooms": [], "reviews_data": [{"author": "入住限制", "score": "", "text": "酒店无24小时前台，若无法在规定时间办理入住，需提前与酒店进行联系。"}, {"author": "婚宴派对限制", "score": "", "text": "酒店客房不接受婚庆/派对/聚会/商业拍摄等用途，多有不便敬请谅解。"}, {"author": "希尔顿", "score": "", "text": "皇冠假日酒店 海外酒店大全 企业差旅索引 企业礼品卡采购"}, {"author": "知识产权", "score": "", "text": "Trip.com Group 或 400-830-6666 中国香港：+852-3008-3295 中国澳门：+86-21 3406-4888 中国台湾：+86-21 3406-4888 其他国家和地区：+86-21-3406-4888"}]}, {"name": "浩枫温德姆酒店（临沧市人民政府玉龙湖公园店）", "score": "4.7", "rating_label": "超棒", "reviews": [], "location": "", "price": "169", "original_price": "289", "images": [], "reviews_data": []}, {"name": "全季酒店（临沧市政府广场店）", "score": "4.8", "rating_label": "超棒", "reviews": [], "location": "近滇西科技师范学院 · 市政府广场", "price": "244", "original_price": "257", "images": [], "reviews_data": []}, {"name": "临沧瑞尚悦景大酒店（沃尔玛广场玉龙湖公园店）", "score": "4.8", "rating_label": "超棒", "reviews": [], "location": "", "price": "150", "original_price": "186", "images": [], "reviews_data": []}, {"name": "塞娅斯度假酒店（玉龙湖公园店）", "score": "4.8", "rating_label": "超棒", "reviews": [], "location": "近佤山凤城莫罕丽广场 · 玉龙湖公园", "price": "135", "original_price": "248", "images": [], "reviews_data": []}, {"name": "北回智慧酒店（临沧市一中店）", "score": "4.8", "rating_label": "超棒", "reviews": [], "location": "近玉龙湖公园 · 滇西科技师范学院", "price": "138", "original_price": "180", "images": [], "reviews_data": []}, {"name": "景岸精选酒店（临沧市一中店）", "score": "4.7", "rating_label": "超棒", "reviews": [], "location": "近临沧汽车客运站 · 老祥云连锁便利店(十三号路店)", "price": "109", "original_price": "219", "images": [], "reviews_data": []}, {"name": "嘉华酒店(临沧市政府玉龙湖公园店)", "score": "4.8", "rating_label": "超棒", "reviews": [], "location": "", "price": "233", "original_price": "292", "images": [], "reviews_data": []}, {"name": "邻仓热限酒店（临沧市一中茶马古镇店）", "score": "4.7", "rating_label": "超棒", "reviews": [], "location": "", "price": "186", "original_price": "234", "images": [], "reviews_data": []}, {"name": "丽枫酒店(临沧市一中店)", "score": "4.7", "rating_label": "超棒", "reviews": [], "location": "近司岗里步行街 · 临沧汽车客运站", "price": "158", "original_price": "162", "images": [], "reviews_data": []}]};
+
+function renderStats() {
+  const h = DATA.hotels;
+  const prices = h.map(x=>parseInt(x.price)||0).filter(x=>x>0);
+  const scores = h.map(x=>parseFloat(x.score)||0).filter(x=>x>0);
+  const totalReviews = h.reduce((s,x)=>s+(parseInt(x.reviews)||0),0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat-card"><div class="stat-value">${h.length}</div><div class="stat-label">酒店总数</div></div>
+    <div class="stat-card"><div class="stat-value">¥${Math.round(prices.reduce((a,b)=>a+b,0)/prices.length)}</div><div class="stat-label">均价</div></div>
+    <div class="stat-card"><div class="stat-value">¥${Math.min(...prices)}~${Math.max(...prices)}</div><div class="stat-label">价格区间</div></div>
+    <div class="stat-card"><div class="stat-value">${(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1)}</div><div class="stat-label">均分</div></div>
+    <div class="stat-card"><div class="stat-value">${totalReviews.toLocaleString()}</div><div class="stat-label">总点评</div></div>
+  `;
+  document.getElementById('totalCount').textContent = `共${h.length}家`;
+}
+
+function imgRow(imgs) {
+  if (!imgs||imgs.length===0) return '';
+  return '<div class="img-strip">'+imgs.slice(0,8).map(u=>`<img src="${u}" loading="lazy" onerror="this.style.display='none'">`).join('')+'</div>';
+}
+
+function renderRooms(rooms) {
+  if (!rooms||rooms.length===0) return '<div class="no-data">暂无房型数据</div>';
+  return rooms.map(r=>`
+    <div class="room-row">
+      <div class="room-name">${r.name||r.room_name||''}</div>
+      <div class="room-price">¥${r.price||''}</div>
+      ${r.bed_type||r.breakfast||r.size?`<div class="room-detail">${[r.bed_type,r.breakfast,r.size,r.cancel_policy].filter(Boolean).join(' | ')}</div>`:''}
+    </div>`).join('');
+}
+
+function renderReviews(reviews) {
+  if (!reviews||reviews.length===0) return '<div class="no-data">暂无评价</div>';
+  return reviews.map(r=>`
+    <div class="review-item">
+      <span class="review-author">${r.author||''}</span> ${r.score?r.score+'分':''}
+      <div class="review-text">${r.text||r.content||''}</div>
+    </div>`).join('');
+}
+
+function scoreClass(s) { const v=parseFloat(s); return v>=4.5?'score-high':v>=4?'score-mid':''; }
+
+function renderHotel(h) {
+  const mainImg = h.images&&h.images.length>0 ? h.images[0] : '';
+  return `
+    <div class="hotel-card">
+      <div class="hotel-header">
+        ${mainImg?`<img class="hotel-img" src="${mainImg}" loading="lazy" onerror="this.style.display='none'">`:''}
+        <div class="hotel-info">
+          <div class="hotel-name">${h.name}</div>
+          <div class="hotel-meta">${h.location||''}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <span class="hotel-score ${scoreClass(h.score)}">⭐ ${h.score||'?'}</span>
+            <span style="font-size:.82em;color:#94a3b8">${h.rating_label||''} · ${(h.reviews||'0').toLocaleString()}条点评</span>
+          </div>
+          <div style="margin-top:8px">
+            <span class="price-tag">¥${h.price||'?'}</span>
+            ${h.original_price?`<span class="price-orig">¥${h.original_price}</span>`:''}
+          </div>
+        </div>
+      </div>
+      ${imgRow((h.images||[]).slice(1))}
+      <div class="room-section">
+        <div class="section-title">🛏️ 房型 (${(h.rooms||[]).length})</div>
+        ${renderRooms(h.rooms)}
+      </div>
+      <div class="review-section">
+        <div class="section-title">💬 住客评价 (${(h.reviews_data||h.reviews||[]).length})</div>
+        ${renderReviews(h.reviews_data||h.reviews)}
+      </div>
+    </div>`;
+}
+
+function sortHotels() {
+  const by = document.getElementById('sortBy').value;
+  const h = DATA.hotels;
+  const fn = {price:(a,b)=>(parseInt(a.price)||0)-(parseInt(b.price)||0),
+              score:(a,b)=>(parseFloat(b.score)||0)-(parseFloat(a.score)||0),
+              reviews:(a,b)=>(parseInt(b.reviews)||0)-(parseInt(a.reviews)||0)};
+  h.sort(fn[by]);
+  document.getElementById('hotels').innerHTML = h.map(renderHotel).join('');
+}
+
+(function init() {
+  renderStats();
+  sortHotels();
+})();
+</script>
+</body>
+</html>
