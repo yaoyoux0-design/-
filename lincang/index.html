@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>临沧酒店竞品分析</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f7;--card:#fff;--pri:#0066ff;--text:#1d1d1f;--t2:#6e6e73;--red:#ff3b30;--r:14px;--sh:0 2px 12px rgba(0,0,0,.08)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{max-width:500px;margin:0 auto;padding:12px}
+h1{font-size:22px;margin-bottom:14px}
+.stats{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.st{flex:1;min-width:70px;background:var(--card);border-radius:var(--r);padding:12px;text-align:center;box-shadow:var(--sh)}
+.st .n{font-size:22px;font-weight:700;color:var(--pri)}
+.st .l{font-size:11px;color:var(--t2);margin-top:2px}
+.sort{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
+.sb{padding:7px 13px;border-radius:20px;border:1px solid #e5e5ea;background:var(--card);font-size:13px;cursor:pointer;white-space:nowrap}
+.sb.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.card{background:var(--card);border-radius:var(--r);padding:14px;margin-bottom:10px;box-shadow:var(--sh)}
+.card .top{display:flex;justify-content:space-between;align-items:flex-start}
+.card .nm{font-size:15px;font-weight:600;line-height:1.3;flex:1;margin-right:8px}
+.card .pr{text-align:right;flex-shrink:0}
+.card .pr .y{font-size:20px;font-weight:700;color:var(--red)}
+.card .pr .u{font-size:12px;color:var(--t2)}
+.card .meta{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+.card .bg{padding:3px 8px;border-radius:6px;font-weight:600;background:#e8f5e9;color:#2e7d32}
+.card .bb{padding:3px 8px;border-radius:6px;font-weight:600;background:#e3f2fd;color:#1565c0}
+.card .lo{font-size:12px;color:var(--t2);margin-top:6px}
+.ft{margin-top:24px;text-align:center;font-size:12px;color:#bbb;padding:16px}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>🏨 临沧市酒店竞品分析</h1>
+<div class="stats" id="stats"></div>
+<div class="sort" id="sort"></div>
+<div id="list"></div>
+<div class="ft">数据来源：携程 · 2026-05-30 · 用❤️生成</div>
+</div>
+<script>
+// Embedded hotel data
+const HOTELS = [
+{"name":"临沧大豪庄园酒店","score":"4.7","reviews":"799","price":"170","rating_label":"超棒","location":"近临沧汽车客运站 · 北回大厦"},
+{"name":"凯里亚德酒店（临沧佤山凤城玉龙湖公园店）","score":"4.7","reviews":"524","price":"169","rating_label":"超棒","location":"近玉龙湖公园 · 佤文化广场"},
+{"name":"景岸逸林酒店（临沧佤山凤城高铁站店）","score":"4.8","reviews":"289","price":"163","rating_label":"超棒","location":""},
+{"name":"塞娅斯度假酒店（玉龙湖公园店）","score":"4.8","reviews":"998","price":"248","rating_label":"超棒","location":"近佤山凤城莫罕丽广场 · 玉龙湖公园"},
+{"name":"北回智慧酒店（临沧市一中店）","score":"4.8","reviews":"140","price":"156","rating_label":"超棒","location":"近玉龙湖公园 · 滇西科技师范学院"},
+{"name":"丽枫酒店(临沧市一中店)","score":"4.7","reviews":"917","price":"162","rating_label":"超棒","location":"近司岗里步行街 · 临沧汽车客运站"},
+{"name":"潮漫智慧酒店（临沧人民医院市一中店）","score":"4.8","reviews":"720","price":"139","rating_label":"超棒","location":"近玉龙湖公园 · 司岗里步行街"}
+];
+
+let sortKey = 'default';
+let data = [...HOTELS];
+
+function render(){
+  const prices = data.map(h=>+h.price).filter(p=>p>0);
+  const avg = Math.round(prices.reduce((a,b)=>a+b,0)/prices.length);
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  document.getElementById('stats').innerHTML = `
+    <div class="st"><div class="n">${data.length}</div><div class="l">酒店数</div></div>
+    <div class="st"><div class="n">¥${avg}</div><div class="l">均价</div></div>
+    <div class="st"><div class="n">¥${min}</div><div class="l">最低价</div></div>
+    <div class="st"><div class="n">¥${max}</div><div class="l">最高价</div></div>`;
+
+  document.getElementById('sort').innerHTML = ['默认','价格↑','价格↓','评分↓'].map((t,i)=>{
+    const keys = ['default','price-asc','price-desc','rating'];
+    return `<span class="sb${sortKey===keys[i]?' on':''}" onclick="sort('${keys[i]}')">${t}</span>`;
+  }).join('');
+
+  document.getElementById('list').innerHTML = data.map((h,i)=>`
+    <div class="card">
+      <div class="top">
+        <div class="nm">${i+1}. ${h.name}</div>
+        <div class="pr"><span class="y">¥${h.price}</span><br><span class="u">起/晚</span></div>
+      </div>
+      <div class="meta">
+        <span class="bg">⭐${h.score} ${h.rating_label}</span>
+        <span class="bb">💬${h.reviews}条点评</span>
+        ${+h.price > avg*1.3 ? '<span style="padding:3px 8px;border-radius:6px;font-weight:600;background:#fff3e0;color:#e65100;font-size:12px">高价位</span>' : ''}
+      </div>
+      ${h.location ? `<div class="lo">📍${h.location}</div>` : ''}
+    </div>`).join('');
+}
+
+function sort(k){
+  sortKey = k;
+  if(k==='price-asc') data.sort((a,b)=>+a.price - +b.price);
+  else if(k==='price-desc') data.sort((a,b)=>+b.price - +a.price);
+  else if(k==='rating') data.sort((a,b)=>+b.score - +a.score);
+  else data = [...HOTELS];
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
